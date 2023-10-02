@@ -52,7 +52,6 @@
 	# get cols
 	GET_DEC
 	mv a4, a0
-	mv t6, a0
 	
 	# Number of inputs t2
 	mul t2, a3, a4
