@@ -43,6 +43,7 @@
 	PRINT_STRING str_col #displays message for column input
 	GET_FLOAT #asks for column input
 	fcvt.wu.s a2, fa0 #saves integer from float for column
+	NEWLINE
 	mul a0, a1, a2 #uses mul to determine number of inputs
 	andi a0, a0, -4 #make word aligned
 	li a7, 9 #allocates heap memory
@@ -66,7 +67,7 @@
 		addi t1, t1, 1 	#increment n ctr
 		j check_input_loop
 		
-	#get matrix loop
+	#get matrix 
 	matrix_start: #initialize loop counter for storing matrix
 		addi t1, x0, 0 #sets t1 to 0 for looping variable
 		mv a0, a5 #uses the temp address to store matrix before usage
@@ -89,9 +90,10 @@
 		add a5, a5, s0 #adds the stored a5 to the new a5
 		mv a0, a5 #sets a0 to start of the next row in memory
 		addi t1, t1, 1 #increments counter by 1
+		NEWLINE
 		j matrix_counter #jumps back to the counter to repeat iteration
 		
-	#get transpose loop
+	#get transpose matrix
 	transpose_start: #initialize loop counter for transposing matrix
 		addi t1, x0, 0 #sets t1 to 0 for looping variable
 		mv a0, a4 #uses the orig address to transpose matrix
