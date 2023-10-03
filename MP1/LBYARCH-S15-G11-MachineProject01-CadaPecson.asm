@@ -43,10 +43,10 @@
 .text
 	#initialization
 	PRINT_STRING str_row #displays message for row input
-	GET_FLOAT #asks for row input
+	GET_FLOAT #sets row input
 	fcvt.wu.s a1, fa0 #saves integer from float for row
 	PRINT_STRING str_col #displays message for column input
-	GET_FLOAT #asks for column input
+	GET_FLOAT #sets column input
 	fcvt.wu.s a2, fa0 #saves integer from float for column
 	mul a0, a1, a2 #uses mul to determine number of inputs
 	andi a0, a0, -4 #make word aligned
@@ -78,7 +78,7 @@
 		j matrix_counter
 	
 	matrix_counter: #stores all the values in the row matrix
-		beq t1, a1, transpose_start #if t1 = a1 go to transpose_loop, if not, proceed to next line
+		beq t1, a1, transpose_start #if t1 = a1 go to transpose_start, if not, proceed to next line
 		addi t2, x0, 0 #sets t2 to 0 for looping variable
 		j matrix_columnincrement
 		
@@ -127,6 +127,3 @@
 	end:
 		li a7, 10 #ends the program
 		ecall
-		
-	
-	
