@@ -48,7 +48,6 @@
 	PRINT_STRING str_col #displays message for column input
 	GET_FLOAT #asks for column input
 	fcvt.wu.s a2, fa0 #saves integer from float for column
-	NEWLINE
 	mul a0, a1, a2 #uses mul to determine number of inputs
 	andi a0, a0, -4 #make word aligned
 	li a7, 9 #allocates heap memory
@@ -119,7 +118,7 @@
 		j transpose_columnincrement #jumps back to store next value
 		
 	transpose_rowincrement: #iterates thru the next row in the matrix
-		addi a4, a4, 4  
+		addi a4, a4, 4  #loads 4 bytes
 		mv a0, a4 #moves a4 back to the base address and incerments it by 4 bytes
 		addi t1, t1, 1 #increments counter by 1
 		NEWLINE
