@@ -38,6 +38,7 @@
 	str_row: .asciz "Rows: "
 	str_col: .asciz "Cols: "
 	str_space: .asciz " "
+	str_transpose: .asciz "Transposed Matrix:"
 
 #TEXT
 .text 
@@ -76,7 +77,8 @@
 		addi a0, a0, 4 #increment pointer
 		addi t1, t1, 1 	#increment n ctr
 		j check_input_loop
-		
+	
+	
 	#get matrix 
 	matrix_start: #initialize loop counter for storing matrix
 		addi t1, x0, 0 #sets t1 to 0 for looping variable
@@ -103,6 +105,8 @@
 		
 	#get transpose matrix
 	transpose_start: #initialize loop counter for transposing matrix
+		PRINT_STRING str_transpose
+		NEWLINE
 		addi t1, x0, 0 #sets t1 to 0 for looping variable
 		mv a0, a3 #uses the orig address to transpose matrix
 		j transpose_counter
