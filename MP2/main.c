@@ -1,10 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 void imgAvgFilter(int* input_image, int* filtered_image, int image_size_x, int image_size_y, int sampling_window_size) {
-  int i, j, k, l;
+    int i, j, k, l;
     for (i = 0; i < image_size_x; i++) {
         for (j = 0; j < image_size_y; j++) {
+            // If the pixel is on the edge, copy the original value
+            if (i == 0 || i == image_size_x - 1 || j == 0 || j == image_size_y - 1) {
+                filtered_image[i * image_size_y + j] = input_image[i * image_size_y + j];
+                continue;
+            }
+
+            // If the pixel is not on the edge, apply the average filter
             int sum = 0;
             int count = 0;
             for (k = -sampling_window_size; k <= sampling_window_size; k++) {
@@ -17,10 +25,13 @@ void imgAvgFilter(int* input_image, int* filtered_image, int image_size_x, int i
                     }
                 }
             }
-            filtered_image[i * image_size_y + j] = sum / count;
+            // Use round to round the average to the nearest integer
+            filtered_image[i * image_size_y + j] = round((double)sum / count);
         }
     }
 }
+
+
 
 void printImage(int* image, int image_size_x, int image_size_y) {
     int i, j;
@@ -33,17 +44,20 @@ void printImage(int* image, int image_size_x, int image_size_y) {
 }
 
 int main(int argc, char** argv) {
-    int image_size_x = 5;
-    int image_size_y = 5;
+    int image_size_x = 6;
+    int image_size_y = 6;
     int sampling_window_size = 1;
     int* input_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
     int* filtered_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
+
+    printf("Please enter the image data in one line:\n");
     int i, j;
     for (i = 0; i < image_size_x; i++) {
         for (j = 0; j < image_size_y; j++) {
-            input_image[i * image_size_y + j] = i * image_size_y + j;
+            scanf("%d", &input_image[i * image_size_y + j]);
         }
     }
+
     imgAvgFilter(input_image, filtered_image, image_size_x, image_size_y, sampling_window_size);
     printImage(input_image, image_size_x, image_size_y);
     printf("\n");
