@@ -47,6 +47,15 @@ int main(int argc, char** argv) {
     int image_size_x = 6;
     int image_size_y = 6;
     int sampling_window_size = 1;
+    
+     // Prompt user to enter image dimensions
+    printf("Enter image size (x y): ");
+    scanf("%d %d", &image_size_x, &image_size_y);
+
+    // Prompt user to enter sampling window size
+    printf("Enter sampling window size: ");
+    scanf("%d", &sampling_window_size);
+    
     int* input_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
     int* filtered_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
 
