@@ -1,7 +1,7 @@
 section .text
-global imgAvgFilter
+global _imgAvgFilter
 
-imgAvgFilter:
+_imgAvgFilter:
     ; Function prologue
     push ebp
     mov ebp, esp
