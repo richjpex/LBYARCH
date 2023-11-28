@@ -22,7 +22,7 @@ int main() {
     int *input_image = (int *)original_image;
     int *filtered_image = malloc((image_size_x) * (image_size_y) * sizeof(int));
 
-    printf("Enter %d x %d matrix values separated by spaces:\n", image_size_x, image_size_y);
+    printf("Enter %d x %d matrix values of the image separated by spaces:\n", image_size_x, image_size_y);
 
     // Read the input values in a single line
     int i;
@@ -30,12 +30,14 @@ int main() {
         scanf("%d", &original_image[0][i]);
     }
 
-    printf("Original Matrix:\n");
+    // Print original image
+    printf("Original Image:\n");
     printMatrix(input_image, image_size_x, image_size_y);
 
     imgAvgFilter(input_image, filtered_image, image_size_x, image_size_y, 3);
 
-    printf("Filtered Matrix:\n");
+    // Print filtered image
+    printf("Filtered Image:\n");
     printMatrix(filtered_image, image_size_x, image_size_y);
 
     free(filtered_image);
