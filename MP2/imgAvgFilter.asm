@@ -174,7 +174,7 @@ _imgAvgFilter:
 
                 MOV ecx, [esp - 44]
                 CMP edi, ecx
-                JL m_col_loop
+                JL main_col_loop
 
         main_row_loop_end:
 
@@ -183,7 +183,7 @@ _imgAvgFilter:
 
         MOV ecx, [esp - 40]
         CMP esi, ecx
-        JL m_row_loop
+        JL main_row_loop
 
     main_col_loop_end:
         xor eax, eax
