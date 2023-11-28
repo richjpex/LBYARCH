@@ -2,49 +2,43 @@
 #include <stdlib.h>
 #include <math.h>
 
-extern void imgAvgFilter(int* input_image, int* filtered_image, int image_size_x, int image_size_y, int sampling_window_size);
+extern void imgAvgFilter(int *input_image, int *filtered_image, int image_size_x, int image_size_y, int sampling_window_size);
 
-void printImage(int* image, int image_size_x, int image_size_y) {
+void printMatrix(int *matrix, int rows, int cols) {
     int i, j;
-    for (i = 0; i < image_size_x; i++) {
-        for (j = 0; j < image_size_y; j++) {
-            printf("%d", image[i * image_size_y + j]);
-            if (j < image_size_y - 1) {
-                printf(" ");  // Print a space between values in the same row
-            }
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            printf("%d ", matrix[i * cols + j]);
         }
         printf("\n");
     }
+    printf("\n");
 }
 
-int main(int argc, char** argv) {
-    int image_size_x, image_size_y;
-    int sampling_window_size = 1;
+int main() {
+    int image_size_x = 6, image_size_y = 6;
 
-    printf("Please enter the number of rows (image_size_x):\n");
-    scanf("%d", &image_size_x);
-    printf("Please enter the number of columns (image_size_y):\n");
-    scanf("%d", &image_size_y);
+    int original_image[6][6];
+    int *input_image = (int *)original_image;
+    int *filtered_image = malloc((image_size_x) * (image_size_y) * sizeof(int));
 
-    int* input_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
-    int* filtered_image = (int*)malloc(image_size_x * image_size_y * sizeof(int));
+    printf("Enter %d x %d matrix values separated by spaces:\n", image_size_x, image_size_y);
 
-    printf("Please enter the image data in one line:\n");
-    int i, j;
-    for (i = 0; i < image_size_x; i++) {
-        for (j = 0; j < image_size_y; j++) {
-            scanf("%d", &input_image[i * image_size_y + j]);
-        }
+    // Read the input values in a single line
+    int i;
+    for (i = 0; i < image_size_x * image_size_y; i++) {
+        scanf("%d", &original_image[0][i]);
     }
 
-    imgAvgFilter(input_image, filtered_image, image_size_x, image_size_y, sampling_window_size);
+    printf("Original Matrix:\n");
+    printMatrix(input_image, image_size_x, image_size_y);
 
-    printf("Input Image:\n");
-    printImage(input_image, image_size_x, image_size_y);
-    printf("\nFiltered Image:\n");
-    printImage(filtered_image, image_size_x, image_size_y);
+    imgAvgFilter(input_image, filtered_image, image_size_x, image_size_y, 3);
 
-    free(input_image);
+    printf("Filtered Matrix:\n");
+    printMatrix(filtered_image, image_size_x, image_size_y);
+
     free(filtered_image);
+
     return 0;
 }
