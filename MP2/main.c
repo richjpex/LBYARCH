@@ -17,16 +17,17 @@ void printMatrix(int *matrix, int rows, int cols) {
 
 int main() {
     int image_size_x = 6, image_size_y = 6;
+    int total_size = image_size_x * image_size_y;
 
-    int original_image[6][6];
+    int original_image[image_size_x][image_size_y];
     int *input_image = (int *)original_image;
     int *filtered_image = malloc((image_size_x) * (image_size_y) * sizeof(int));
 
-    printf("Enter %d x %d matrix values of the image separated by spaces:\n", image_size_x, image_size_y);
+    printf("Enter %d values in one line separated by spaces (%d x %d):\n", total_size, image_size_x, image_size_y);
 
     // Read the input values in a single line
     int i;
-    for (i = 0; i < image_size_x * image_size_y; i++) {
+    for (i = 0; i < total_size; i++) {
         scanf("%d", &original_image[0][i]);
     }
 
@@ -40,6 +41,7 @@ int main() {
     printf("Filtered Image:\n");
     printMatrix(filtered_image, image_size_x, image_size_y);
 
+    free(input_image);
     free(filtered_image);
 
     return 0;
