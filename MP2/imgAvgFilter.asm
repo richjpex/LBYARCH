@@ -22,6 +22,28 @@ segment .bss
     l resd 1
 
 segment .text
+segment .data
+    sum dd 0
+
+segment .bss
+    ; parameter variables
+    input_image_pointer resd 1
+    filtered_image_pointer resd 1
+    image_size_x resd 1
+    image_size_y resd 1
+    sampling_window_size resd 1
+
+    ; local variables
+    border resd 1
+
+    ; loop variables
+    i resd 1
+    j resd 1
+
+    k resd 1
+    l resd 1
+
+segment .text
 _imgAvgFilter:
     push ebp
     mov ebp, esp
