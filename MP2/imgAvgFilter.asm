@@ -1,9 +1,7 @@
-; Declare the function as global
 global _imgAvgFilter
 
 section .text
 _imgAvgFilter:
-    ; Function prologue: save the current base pointer and set a new base pointer
     push ebp
     MOV ebp, esp
 
