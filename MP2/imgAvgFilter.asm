@@ -1,114 +1,166 @@
-section .text
-    global _imgAvgFilter
+global _imgAvgFilter
 
+section .text
 _imgAvgFilter:
     push ebp
     mov ebp, esp
 
-    ; Function Parameters
-    mov eax, [ebp + 8]        ; input_image
-    mov ebx, [ebp + 12]       ; filtered_image
-    mov ecx, [ebp + 16]       ; image_size_x
-    mov edx, [ebp + 20]       ; image_size_y
-    mov esi, [ebp + 24]       ; sampling_window_size
+    ; Initializing variables
+    mov esi, [ebp+8]   ; input_image
+    mov dword [ebp-20], esi  ; input_image_pointer
 
-    ; Variables
-    mov edi, 0                ; edi will be used for indexing
+    mov esi, [ebp+12]  ; filtered_image
+    mov dword [ebp-16], esi  ; filtered_image_pointer
 
-row_loop:
-    ; Check if we have reached the end of rows
-    cmp edi, ecx
-    jge end_function
+    mov esi, [ebp+16]  ; image_size_x
+    mov dword [ebp-12], esi  ; image_size_x
 
-    ; Column loop
-    mov esi, 0                ; reset esi for column indexing
+    mov esi, [ebp+20]  ; image_size_y
+    mov dword [ebp-8], esi  ; image_size_y
 
-column_loop:
-    ; Check if we have reached the end of columns
-    cmp esi, edx
-    jge next_row
+    mov esi, [ebp+24]  ; sampling_window_size
+    mov dword [ebp-4], esi  ; sampling_window_size
 
-    ; Calculate the average value for the current pixel
-    push eax                  ; save input_image pointer
-    push ebx                  ; save filtered_image pointer
-    push ecx                  ; save image_size_x
-    push edx                  ; save image_size_y
-    push esi                  ; save sampling_window_size
+    mov dword [ebp-28], 0  ; i
+    mov dword [ebp-24], 0  ; j
+    mov dword [ebp-32], 0  ; k
+    mov dword [ebp-36], 0  ; l
 
-    ; Call a helper function to calculate the average
-    call calculateAverage
+    mov eax, [ebp-4]
+    mov ebx, 2
+    div ebx
+    dec eax
+    mov [ebp-40], eax  ; window_size_border
 
-    add esp, 20               ; cleanup stack
+image_row:
+    mov eax, [ebp-28]
+    cmp eax, [ebp-12]
+    jge image_row_end
 
-    ; Move to the next column
-    inc esi
-    jmp column_loop
+    mov dword [ebp-24], 0  ; j
 
-next_row:
-    ; Move to the next row
-    inc edi
-    jmp row_loop
+image_col:
+    mov eax, [ebp-24]
+    cmp eax, [ebp-8]
+    jge image_col_end
 
-end_function:
-    pop ebp
-    ret
+    mov eax, [ebp-28]
+    cmp eax, [ebp-40]
+    jle true
 
-calculateAverage:
-    ; Function Parameters
-    mov eax, [esp + 4]        ; input_image
-    mov ebx, [esp + 8]        ; filtered_image
-    mov ecx, [esp + 12]       ; image_size_x
-    mov edx, [esp + 16]       ; image_size_y
-    mov esi, [esp + 20]       ; sampling_window_size
+    mov ebx, [ebp-12]
+    dec ebx
+    sub ebx, [ebp-40]
+    cmp eax, ebx
+    jge true
 
-    ; Variables
-    mov edi, 0                ; sum of pixel values
-    mov ebp, 0                ; count of pixels
+    mov eax, [ebp-24]
+    cmp eax, [ebp-40]
+    jle true
 
-    ; Loop through the sampling window
-    mov esi, 0               ; start from the row above the current pixel
-window_row_loop:
-    cmp esi, 1
-    jg window_end
+    mov ebx, [ebp-8]
+    dec ebx
+    sub ebx, [ebp-40]
+    cmp eax, ebx
+    jge true
 
-    mov ecx, esi              ; set ecx to the current row offset
+    jmp false
 
-    mov edx, 0               ; start from the column left of the current pixel
-window_col_loop:
-    cmp edx, 1
-    jg next_window_row
+true:
+    mov eax, [ebp-28]
+    mov ebx, [ebp-12]
+    imul ebx
+    add eax, [ebp-24]
+    shl eax, 2
+    mov esi, [ebp-20]  ; input_image_pointer
+    add esi, eax
 
-    ; Calculate the index of the current pixel in the input image
-    mov eax, [esp + 4]        ; input_image
-    mov ebx, [esp + 8]        ; filtered_image
-    mov edi, [esp + 12]       ; image_size_x
-    mov ebp, [esp + 16]       ; image_size_y
-    mov esi, [esp + 20]       ; sampling_window_size
-    imul ecx, edi
-    add edx, ecx
-    add edx, eax
-    mov eax, edx   ; input_image[row_offset + col_offset]
-
-    ; Add the pixel value to the sum
+    mov edi, [ebp-16]  ; filtered_image_pointer
     add edi, eax
 
-    ; Move to the next column in the window
-    inc edx
-    jmp window_col_loop
+    mov eax, [esi]
+    mov [edi], eax
+    jmp end_if_condition
 
-next_window_row:
-    ; Move to the next row in the window
-    inc esi
-    jmp window_row_loop
+false:
+    mov dword [ebp-44], 0  ; total
+    mov dword [ebp-32], 0  ; k
 
-window_end:
-    ; Calculate the average value
-    mov eax, edi
-    cdq                      ; sign extend eax into edx:eax
-    idiv ebp                 ; divide the sum by the count
+image_row_sampling:
+    mov eax, [ebp-32]
+    cmp eax, [ebp-4]
+    jge image_row_sampling_end
 
-    ; Store the average value in the filtered image
-    mov [ebx], eax
-    add ebx, 4               ; move to the next element in filtered_image
+    mov dword [ebp-36], 0  ; l
 
+sample_window_col:
+    mov eax, [ebp-36]
+    cmp eax, [ebp-4]
+    jge sample_window_col_end
+
+    mov eax, [ebp-28]
+    mov ecx, [ebp-40]
+    inc ecx
+    sub eax, ecx
+    add eax, [ebp-32]
+    mov ebx, [ebp-12]
+    imul ebx
+    mov ebx, [ebp-24]
+    sub ebx, ecx
+    add ebx, [ebp-36]
+    add eax, ebx
+    shl eax, 2
+    mov esi, [ebp-20]  ; input_image_pointer
+    add esi, eax
+
+    mov eax, [ebp-44]  ; total
+    add eax, [esi]
+    mov [ebp-44], eax
+
+    inc dword [ebp-36]
+    jmp sample_window_col
+
+sample_window_col_end:
+    inc dword [ebp-32]
+    jmp image_row_sampling
+
+image_row_sampling_end:
+    mov eax, [ebp-4]
+    mov ebx, [ebp-4]
+    imul ebx
+    mov ebx, eax
+    mov eax, [ebp-44]  ; total
+    mov ecx, ebx
+    shr ebx, 1
+    add eax, ebx
+    mov ebx, ecx
+    div ebx
+
+    mov ecx, eax
+    mov eax, [ebp-28]
+    mov ebx, [ebp-12]
+    imul ebx
+    add eax, [ebp-24]
+    shl eax, 2
+    mov edi, [ebp-16]  ; filtered_image_pointer
+    add edi, eax
+
+    mov eax, ecx
+    mov [edi], eax
+
+end_if_condition:
+    mov eax, [ebp-24]
+    inc eax
+    mov [ebp-24], eax
+    jmp image_col
+
+image_col_end:
+    mov eax, [ebp-28]
+    inc eax
+    mov [ebp-28], eax
+    jmp image_row
+
+image_row_end:
+    mov esp, ebp
+    pop ebp
     ret
