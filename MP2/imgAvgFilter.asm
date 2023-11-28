@@ -26,7 +26,7 @@ _imgAvgFilter:
     mov esi, [ebp + 24]
     mov dword [esp - 48], esi
 
-    ; Precalc half of sample window
+    ; Precalculate half of sample window
     mov eax, [esp - 48]
     sar eax, 1
     mov [esp - 52], eax
@@ -34,10 +34,10 @@ _imgAvgFilter:
     ; Clear eax
     xor eax, eax
 
-    mov esi, 0 ;in_y/row counter
-    m_row_loop:
-        mov edi, 0 ;in_x/column counter
-        m_col_loop:
+    mov esi, 0
+    main_row_loop:
+        mov edi, 0
+        main_col_loop:
             ; Reset Sum
             mov edx, 0
 
@@ -57,47 +57,47 @@ _imgAvgFilter:
             mov [esp - 56], eax
             mov [esp - 60], ebx
 
-            start_if:
+            check_if_in_border:
             ; if x <= border - 1
             mov eax, [esp - 52]
             dec eax
             cmp edi, eax
-            jle if_false
+            jle not_in_border
 
             ; if x >= img_w - border 
             mov eax, [esp - 44]
             sub eax, [esp - 52]
             cmp edi, eax
-            jge if_false
+            jge not_in_border
 
             ; if y <= border - 1
             mov eax, [esp - 52]
             dec eax
             cmp esi, eax
-            jle if_false
+            jle not_in_border
 
             ; if y >= img_h - border
             mov eax, [esp - 40]
             sub eax, [esp - 52]
             cmp esi, eax
-            jge if_false
+            jge not_in_border
 
-            jmp if_true
+            jmp in_border
 
             ; If true handles calculation of average within borders
-            if_true:
+            in_border:
                 mov [esp - 64], edi
                 mov [esp - 68], esi
 
-                ; Sample Window Iteration and Summation
+                ; sample_window iteration
                 mov ebx, [esp - 52]
                 neg ebx
                 mov esi, ebx ;sm_y
-                s_col_loop:
+                inner_loop_col:
                     mov ebx, [esp - 52]
                     neg ebx
                     mov edi, ebx ; sm_x
-                    s_row_loop:
+                    inner_loop_row:
                         mov eax, [esp - 56]
 
                         ; input_image[(in_x + sm_x * 4) + (in_y + sm_y * img_w * 4)]
@@ -118,17 +118,17 @@ _imgAvgFilter:
                         mov ebx, [esp - 48]
                         dec ebx
                         cmp edi, ebx
-                        jl s_row_loop
+                        jl inner_loop_row
 
-                    s_row_loop_end:
+                    inner_loop_row_end:
 
                     inc esi
                     mov ebx, [esp - 48]
                     dec ebx
                     cmp esi, ebx
-                    jl s_col_loop
+                    jl inner_loop_col
 
-                s_col_loop_end:
+                inner_loop_col_end:
 
                 mov edi, [esp - 64]
                 mov esi, [esp - 68]
@@ -151,9 +151,9 @@ _imgAvgFilter:
                 mov ebx, [esp - 60]
                 mov [ebx], eax
 
-                jmp end_if_true
+                jmp end_in_border
 
-            if_false:
+            not_in_border:
                 mov eax, [esp - 56]
                 mov ecx, [eax]
 
@@ -164,9 +164,9 @@ _imgAvgFilter:
                 xor eax, eax
                 xor ebx, ebx
 
-                jmp end_if_true
+                jmp end_in_border
 
-            end_if_true:
+            end_in_border:
                 ; Increment in_x
                 inc edi
                 mov [esp - 64], edi
@@ -175,7 +175,7 @@ _imgAvgFilter:
                 cmp edi, ecx
                 jl m_col_loop
 
-        m_row_loop_end:
+        main_row_loop_end:
 
         inc esi
         mov [esp - 68], esi
@@ -184,8 +184,7 @@ _imgAvgFilter:
         cmp esi, ecx
         jl m_row_loop
 
-    m_col_loop_end:
-
-    xor eax, eax
-    pop ebp
-    ret
+    main_col_loop_end:
+        xor eax, eax
+        pop ebp
+        ret
