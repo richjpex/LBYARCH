@@ -20,14 +20,19 @@ _imgAvgFilter:
     push ebp
     mov ebp, esp
 
+    ; Initializing variables
     mov esi, [ebp+8]   ; input_image
     mov dword [input_image_pointer], esi
+
     mov esi, [ebp+12]  ; filtered_image
     mov dword [filtered_image_pointer], esi
+
     mov esi, [ebp+16]  ; image_size_x
     mov dword [image_size_x], esi
+
     mov esi, [ebp+20]  ; image_size_y
     mov dword [image_size_y], esi
+
     mov esi, [ebp+24]  ; sampling_window_size
     mov dword [sampling_window_size], esi
 
