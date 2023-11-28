@@ -1,180 +1,114 @@
-global _imgAvgFilter
-
-section .bss
-    input_image_pointer resd 1
-    filtered_image_pointer resd 1
-    image_size_x resd 1
-    image_size_y resd 1
-    sampling_window_size resd 1
-    border resd 1
-    i resd 1
-    j resd 1
-    k resd 1
-    l resd 1
-    
-section .data
-    total dd 0
-
 section .text
+    global _imgAvgFilter
+
 _imgAvgFilter:
     push ebp
-    MOV ebp, esp
+    mov ebp, esp
 
-    ; Initializing variables
-    MOV esi, [ebp+8]   ; input_image
-    MOV dword [input_image_pointer], esi
+    ; Function Parameters
+    mov eax, [ebp + 8]        ; input_image
+    mov ebx, [ebp + 12]       ; filtered_image
+    mov ecx, [ebp + 16]       ; image_size_x
+    mov edx, [ebp + 20]       ; image_size_y
+    mov esi, [ebp + 24]       ; sampling_window_size
 
-    MOV esi, [ebp+12]  ; filtered_image
-    MOV dword [filtered_image_pointer], esi
+    ; Variables
+    mov edi, 0                ; edi will be used for indexing
 
-    MOV esi, [ebp+16]  ; image_size_x
-    MOV dword [image_size_x], esi
+row_loop:
+    ; Check if we have reached the end of rows
+    cmp edi, ecx
+    jge end_function
 
-    MOV esi, [ebp+20]  ; image_size_y
-    MOV dword [image_size_y], esi
+    ; Column loop
+    mov esi, 0                ; reset esi for column indexing
 
-    MOV esi, [ebp+24]  ; sampling_window_size
-    MOV dword [sampling_window_size], esi
+column_loop:
+    ; Check if we have reached the end of columns
+    cmp esi, edx
+    jge next_row
 
-    MOV dword [i], 0
-    MOV dword [j], 0
-    MOV dword [border], 0
+    ; Calculate the average value for the current pixel
+    push eax                  ; save input_image pointer
+    push ebx                  ; save filtered_image pointer
+    push ecx                  ; save image_size_x
+    push edx                  ; save image_size_y
+    push esi                  ; save sampling_window_size
 
-    MOV eax, [sampling_window_size]
-    MOV ebx, 2
-    DIV ebx
-    DEC eax
-    MOV [border], eax
+    ; Call a helper function to calculate the average
+    call calculateAverage
 
-for_row:
-    MOV eax, [i]
-    CMP eax, [image_size_x]
-    JGE for_row_end
+    add esp, 20               ; cleanup stack
 
-    MOV dword [j], 0
+    ; Move to the next column
+    inc esi
+    jmp column_loop
 
-for_col:
-    MOV eax, [j]
-    CMP eax, [image_size_y]
-    JGE for_col_end
+next_row:
+    ; Move to the next row
+    inc edi
+    jmp row_loop
 
-    MOV eax, [i]
-    CMP eax, [border]
-    JLE true_condition
-
-    MOV ebx, [image_size_x]
-    DEC ebx
-    SUB ebx, [border]
-    CMP eax, ebx
-    JGE true_condition
-
-    MOV eax, [j]
-    CMP eax, [border]
-    JLE true_condition
-
-    MOV ebx, [image_size_y]
-    DEC ebx
-    SUB ebx, [border]
-    CMP eax, ebx
-    JGE true_condition
-
-    JMP false_condition
-
-    true_condition:
-        MOV eax, [i]
-        MOV ebx, [image_size_x]
-        MUL ebx
-        ADD eax, [j]
-        SHL eax, 2
-        MOV esi, [input_image_pointer]
-        ADD esi, eax
-
-        MOV edi, [filtered_image_pointer]
-        ADD edi, eax
-
-        MOV eax, [esi]
-        MOV [edi], eax
-        JMP end_if_condition
-
-    false_condition:
-        MOV dword [total], 0
-        MOV dword [k], 0 
-
-for_row_sampling:
-        MOV eax, [k]
-        CMP eax, [sampling_window_size]
-        JGE for_row_sampling_end
-
-        MOV dword [l], 0
-
-for_col_sampling:
-            MOV eax, [l]
-            CMP eax, [sampling_window_size]
-            JGE for_col_sampling_end
-
-            MOV eax, [i]
-            MOV ecx, [border]
-            INC ecx
-            SUB eax, ecx
-            ADD eax, [k]
-            MOV ebx, [image_size_x]
-            MUL ebx
-            MOV ebx, [j]
-            SUB ebx, ecx
-            ADD ebx, [l]
-            ADD eax, ebx
-            SHL eax, 2
-            MOV esi, [input_image_pointer]
-            ADD esi, eax
-
-            MOV eax, [total]
-            ADD eax, [esi]
-            MOV [total], eax
-
-            INC dword [l]
-            JMP for_col_sampling
-
-for_col_sampling_end:
-        INC dword [k]
-        JMP for_row_sampling
-
-for_row_sampling_end:
-        MOV eax, [sampling_window_size]
-        MOV ebx, [sampling_window_size]
-        MUL ebx
-        MOV ebx, eax
-        MOV eax, [total]
-        MOV ecx, ebx
-        shr ebx, 1
-        ADD eax, ebx
-        MOV ebx, ecx
-        DIV ebx
-
-        MOV ecx, eax
-        MOV eax, [i]
-        MOV ebx, [image_size_x]
-        MUL ebx
-        ADD eax, [j]
-        SHL eax, 2
-        MOV edi, [filtered_image_pointer]
-        ADD edi, eax
-
-        MOV eax, ecx
-        MOV [edi], eax
-
-end_if_condition:
-        MOV eax, [j]
-        INC eax
-        MOV [j], eax
-        JMP for_col
-
-for_col_end:
-    MOV eax, [i]
-    INC eax
-    MOV [i], eax
-    JMP for_row
-
-for_row_end:
-    MOV esp, ebp
+end_function:
     pop ebp
+    ret
+
+calculateAverage:
+    ; Function Parameters
+    mov eax, [esp + 4]        ; input_image
+    mov ebx, [esp + 8]        ; filtered_image
+    mov ecx, [esp + 12]       ; image_size_x
+    mov edx, [esp + 16]       ; image_size_y
+    mov esi, [esp + 20]       ; sampling_window_size
+
+    ; Variables
+    mov edi, 0                ; sum of pixel values
+    mov ebp, 0                ; count of pixels
+
+    ; Loop through the sampling window
+    mov esi, 0               ; start from the row above the current pixel
+window_row_loop:
+    cmp esi, 1
+    jg window_end
+
+    mov ecx, esi              ; set ecx to the current row offset
+
+    mov edx, 0               ; start from the column left of the current pixel
+window_col_loop:
+    cmp edx, 1
+    jg next_window_row
+
+    ; Calculate the index of the current pixel in the input image
+    mov eax, [esp + 4]        ; input_image
+    mov ebx, [esp + 8]        ; filtered_image
+    mov edi, [esp + 12]       ; image_size_x
+    mov ebp, [esp + 16]       ; image_size_y
+    mov esi, [esp + 20]       ; sampling_window_size
+    imul ecx, edi
+    add edx, ecx
+    add edx, eax
+    mov eax, edx   ; input_image[row_offset + col_offset]
+
+    ; Add the pixel value to the sum
+    add edi, eax
+
+    ; Move to the next column in the window
+    inc edx
+    jmp window_col_loop
+
+next_window_row:
+    ; Move to the next row in the window
+    inc esi
+    jmp window_row_loop
+
+window_end:
+    ; Calculate the average value
+    mov eax, edi
+    cdq                      ; sign extend eax into edx:eax
+    idiv ebp                 ; divide the sum by the count
+
+    ; Store the average value in the filtered image
+    mov [ebx], eax
+    add ebx, 4               ; move to the next element in filtered_image
+
     ret
