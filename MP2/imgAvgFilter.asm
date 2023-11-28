@@ -3,46 +3,43 @@ section .text
 global _imgAvgFilter
 
 _imgAvgFilter:
-    ; Parameter Initialization
+    ; Parameters:
+    ;   [ebp + 8]   - Input Image
+    ;   [ebp + 12]  - Output Image
+    ;   [ebp + 16]  - Image Dimensions
+    ;   [ebp + 20]  - Image Width
+    ;   [ebp + 24]  - Sample Window Size
+
     push ebp
     mov ebp, esp
 
-    ; Input Image
     MOV esi, [ebp + 8]
     MOV dword [esp - 32], esi
 
-    ; Output Image
     MOV esi, [ebp + 12]
     MOV dword [esp - 36], esi
 
-    ; Image Dimensions
     MOV esi, [ebp + 16]
     MOV dword [esp - 40], esi
 
-    ; Image Width
     MOV esi, [ebp + 20]
     MOV dword [esp - 44], esi
 
-    ; Sample Window Size
     MOV esi, [ebp + 24]
     MOV dword [esp - 48], esi
 
-    ; Precalculate half of sample window
     MOV eax, [esp - 48]
-    sar eax, 1
+    SAR eax, 1
     MOV [esp - 52], eax
 
-    ; Clear eax
     XOR eax, eax
 
     MOV esi, 0
     main_row_loop:
         MOV edi, 0
         main_col_loop:
-            ; Reset Sum
             MOV edx, 0
 
-            ; Calculates offset for index
             MOV ecx, [esp - 44]
             IMUL ecx, esi
             ADD ecx, edi
@@ -54,30 +51,25 @@ _imgAvgFilter:
             MOV ebx, [esp - 36]
             ADD ebx, ecx
 
-            ; eax and ebx contain an ADDress pointer to the start of each image
             MOV [esp - 56], eax
             MOV [esp - 60], ebx
 
             check_if_in_border:
-            ; if x <= border - 1
             MOV eax, [esp - 52]
             DEC eax
             CMP edi, eax
             JLE not_in_border
 
-            ; if x >= img_w - border 
             MOV eax, [esp - 44]
             SUB eax, [esp - 52]
             CMP edi, eax
             JGE not_in_border
 
-            ; if y <= border - 1
             MOV eax, [esp - 52]
             DEC eax
             CMP esi, eax
             JLE not_in_border
 
-            ; if y >= img_h - border
             MOV eax, [esp - 40]
             SUB eax, [esp - 52]
             CMP esi, eax
@@ -85,25 +77,20 @@ _imgAvgFilter:
 
             JMP in_border
 
-            ; If true handles calculation of average within borders
             in_border:
                 MOV [esp - 64], edi
                 MOV [esp - 68], esi
 
-                ; sample_window iteration
                 MOV ebx, [esp - 52]
                 NEG ebx
-                MOV esi, ebx ;sm_y
+                MOV esi, ebx
                 inner_loop_col:
                     MOV ebx, [esp - 52]
                     NEG ebx
-                    MOV edi, ebx ; sm_x
+                    MOV edi, ebx
                     inner_loop_row:
                         MOV eax, [esp - 56]
 
-                        ; input_image[(in_x + sm_x * 4) + (in_y + sm_y * img_w * 4)]
-
-                        ; sm_x * 4
                         MOV ebx, edi
                         IMUL ebx, 4
                         ADD eax, ebx
@@ -148,7 +135,6 @@ _imgAvgFilter:
 
                 DIV ebx
 
-                ; EAX has Averaged Value
                 MOV ebx, [esp - 60]
                 MOV [ebx], eax
 
@@ -168,7 +154,6 @@ _imgAvgFilter:
                 JMP end_in_border
 
             end_in_border:
-                ; Increment in_x
                 INC edi
                 MOV [esp - 64], edi
 
