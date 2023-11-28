@@ -1,190 +1,191 @@
+section .text
 global _imgAvgFilter
 
-section .text
 _imgAvgFilter:
+    ; Parameter Initialization
     push ebp
-    MOV ebp, esp
+    mov ebp, esp
 
-    ; Initializing variables
-    MOV esi, [ebp+8]   ; input_image
-    MOV dword [ebp-20], esi  ; input_image_pointer
+    ; Input Image
+    mov esi, [ebp + 8]
+    mov dword [esp - 32], esi
 
-    MOV esi, [ebp+12]  ; filtered_image
-    MOV dword [ebp-16], esi  ; filtered_image_pointer
+    ; Output Image
+    mov esi, [ebp + 12]
+    mov dword [esp - 36], esi
 
-    MOV esi, [ebp+16]  ; image_size_x
-    MOV dword [ebp-12], esi  ; image_size_x
+    ; Image Dimensions
+    mov esi, [ebp + 16]
+    mov dword [esp - 40], esi
 
-    MOV esi, [ebp+20]  ; image_size_y
-    MOV dword [ebp-8], esi  ; image_size_y
+    ; Image Width
+    mov esi, [ebp + 20]
+    mov dword [esp - 44], esi
 
-    MOV esi, [ebp+24]  ; sampling_window_size
-    MOV dword [ebp-4], esi  ; sampling_window_size
+    ; Sample Window Size
+    mov esi, [ebp + 24]
+    mov dword [esp - 48], esi
 
-    ; Initialize loop counters and other variables
-    MOV dword [ebp-28], 0  ; i
-    MOV dword [ebp-24], 0  ; j
-    MOV dword [ebp-32], 0  ; k
-    MOV dword [ebp-36], 0  ; l
+    ; Precalc half of sample window
+    mov eax, [esp - 48]
+    sar eax, 1
+    mov [esp - 52], eax
 
-    ; Calculate the border for image processing
-    MOV eax, [ebp-4]
-    MOV ebx, 2
-    DIV ebx
-    DEC eax
-    MOV [ebp-40], eax  ; border
+    ; Clear eax
+    xor eax, eax
 
-image_row:
-    ; Check if i >= image_size_x
-    MOV eax, [ebp-28]
-    CMP eax, [ebp-12]
-    JGE end
+    mov esi, 0 ;in_y/row counter
+    m_row_loop:
+        mov edi, 0 ;in_x/column counter
+        m_col_loop:
+            ; Reset Sum
+            mov edx, 0
 
-    ; Reset j for a new row
-    MOV dword [ebp-24], 0  ; j
+            ; Calculates offset for index
+            mov ecx, [esp - 44]
+            imul ecx, esi
+            add ecx, edi
+            sal ecx, 2
 
-image_col:
-    ; Check if j >= image_size_y
-    MOV eax, [ebp-24]
-    CMP eax, [ebp-8]
-    JGE image_col_end
+            mov eax, [esp - 32]
+            add eax, ecx
 
-    ; Check if i is within the border
-    MOV eax, [ebp-28]
-    CMP eax, [ebp-40]
-    JLE true
+            mov ebx, [esp - 36]
+            add ebx, ecx
 
-    ; Check if i > image_size_x - border
-    MOV ebx, [ebp-12]
-    DEC ebx
-    SUB ebx, [ebp-40]
-    CMP eax, ebx
-    JGE true
+            ; eax and ebx contain an address pointer to the start of each image
+            mov [esp - 56], eax
+            mov [esp - 60], ebx
 
-    ; Check if j is within the border
-    MOV eax, [ebp-24]
-    CMP eax, [ebp-40]
-    JLE true
+            start_if:
+            ; if x <= border - 1
+            mov eax, [esp - 52]
+            dec eax
+            cmp edi, eax
+            jle if_false
 
-    ; Check if j > image_size_y - border
-    MOV ebx, [ebp-8]
-    DEC ebx
-    SUB ebx, [ebp-40]
-    CMP eax, ebx
-    JGE true
+            ; if x >= img_w - border 
+            mov eax, [esp - 44]
+            sub eax, [esp - 52]
+            cmp edi, eax
+            jge if_false
 
-    JMP false
+            ; if y <= border - 1
+            mov eax, [esp - 52]
+            dec eax
+            cmp esi, eax
+            jle if_false
 
-true:
-    ; Calculate pixel offset in input_image and filtered_image
-    MOV eax, [ebp-28]
-    MOV ebx, [ebp-12]
-    IMUL ebx
-    ADD eax, [ebp-24]
-    SHL eax, 2
-    MOV esi, [ebp-20]
-    ADD esi, eax
+            ; if y >= img_h - border
+            mov eax, [esp - 40]
+            sub eax, [esp - 52]
+            cmp esi, eax
+            jge if_false
 
-    MOV edi, [ebp-16]
-    ADD edi, eax
+            jmp if_true
 
-    ; Copy pixel value from input_image to filtered_image
-    MOV eax, [esi]
-    MOV [edi], eax
-    JMP end_if_condition
+            ; If true handles calculation of average within borders
+            if_true:
+                mov [esp - 64], edi
+                mov [esp - 68], esi
 
-false:
-    ; Initialize variables for window sampling
-    MOV dword [ebp-44], 0  ; total
-    MOV dword [ebp-32], 0  ; k
+                ; Sample Window Iteration and Summation
+                mov ebx, [esp - 52]
+                neg ebx
+                mov esi, ebx ;sm_y
+                s_col_loop:
+                    mov ebx, [esp - 52]
+                    neg ebx
+                    mov edi, ebx ; sm_x
+                    s_row_loop:
+                        mov eax, [esp - 56]
 
-image_row_sampling:
-    ; Check if k >= sampling_window_size
-    MOV eax, [ebp-32]
-    CMP eax, [ebp-4]
-    JGE image_row_sampling_end
+                        ; input_image[(in_x + sm_x * 4) + (in_y + sm_y * img_w * 4)]
 
-    ; Initialize variables for window sampling in the column
-    MOV dword [ebp-36], 0  ; l
+                        ; sm_x * 4
+                        mov ebx, edi
+                        imul ebx, 4
+                        add eax, ebx
 
-sample_window_col:
-    ; Check if l >= sampling_window_size
-    MOV eax, [ebp-36]
-    CMP eax, [ebp-4]
-    JGE sample_window_col_end
+                        mov ebx, esi
+                        imul ebx, [esp - 44]
+                        imul ebx, 4
+                        add eax, ebx
 
-    ; Calculate the offset for window sampling in input_image
-    MOV eax, [ebp-28]
-    MOV ecx, [ebp-40]
-    INC ecx
-    SUB eax, ecx
-    ADD eax, [ebp-32]
-    MOV ebx, [ebp-12]
-    IMUL ebx
-    MOV ebx, [ebp-24]
-    SUB ebx, ecx
-    ADD ebx, [ebp-36]
-    ADD eax, ebx
-    SHL eax, 2
-    MOV esi, [ebp-20]  ; input_image_pointer
-    ADD esi, eax
+                        add edx, [eax]
 
-    ; Accumulate pixel values for window sampling
-    MOV eax, [ebp-44]  ; total
-    ADD eax, [esi]
-    MOV [ebp-44], eax
+                        inc edi
+                        mov ebx, [esp - 48]
+                        dec ebx
+                        cmp edi, ebx
+                        jl s_row_loop
 
-    ; Increment l for the next column
-    INC dword [ebp-36]
-    JMP sample_window_col
+                    s_row_loop_end:
 
-sample_window_col_end:
-    ; Increment k for the next row
-    INC dword [ebp-32]
-    JMP image_row_sampling
+                    inc esi
+                    mov ebx, [esp - 48]
+                    dec ebx
+                    cmp esi, ebx
+                    jl s_col_loop
 
-image_row_sampling_end:
-    ; Calculate the average pixel value in the window
-    MOV eax, [ebp-4]
-    MOV ebx, [ebp-4]
-    IMUL ebx
-    MOV ebx, eax
-    MOV eax, [ebp-44]  ; total
-    MOV ecx, ebx
-    shr ebx, 1
-    ADD eax, ebx
-    MOV ebx, ecx
-    DIV ebx
+                s_col_loop_end:
 
-    ; Calculate the offset for updating the filtered_image
-    MOV ecx, eax
-    MOV eax, [ebp-28]
-    MOV ebx, [ebp-12]
-    IMUL ebx
-    ADD eax, [ebp-24]
-    SHL eax, 2
-    MOV edi, [ebp-16]  ; filtered_image_pointer
-    ADD edi, eax
+                mov edi, [esp - 64]
+                mov esi, [esp - 68]
 
-    ; Store the average pixel value in the filtered_image
-    MOV eax, ecx
-    MOV [edi], eax
+                xor eax, eax
 
-end_if_condition:
-    ; Increment j for the next column in the row
-    MOV eax, [ebp-24]
-    INC eax
-    MOV [ebp-24], eax
-    JMP image_col
+                mov eax, edx
+                xor edx, edx
 
-image_col_end:
-    ; Increment i for the next row
-    MOV eax, [ebp-28]
-    INC eax
-    MOV [ebp-28], eax
-    JMP image_row
+                mov ebx, [esp - 48]
+                imul ebx, ebx
+                mov ecx, ebx
+                sar ecx, 1
 
-end:
-    MOV esp, ebp
+                add eax, ecx
+
+                div ebx
+
+                ; EAX has Averaged Value
+                mov ebx, [esp - 60]
+                mov [ebx], eax
+
+                jmp end_if_true
+
+            if_false:
+                mov eax, [esp - 56]
+                mov ecx, [eax]
+
+                mov ebx, [esp - 60]
+                mov [ebx], ecx
+
+                ; Clear eax, ebx
+                xor eax, eax
+                xor ebx, ebx
+
+                jmp end_if_true
+
+            end_if_true:
+                ; Increment in_x
+                inc edi
+                mov [esp - 64], edi
+
+                mov ecx, [esp - 44]
+                cmp edi, ecx
+                jl m_col_loop
+
+        m_row_loop_end:
+
+        inc esi
+        mov [esp - 68], esi
+
+        mov ecx, [esp - 40]
+        cmp esi, ecx
+        jl m_row_loop
+
+    m_col_loop_end:
+
+    xor eax, eax
     pop ebp
     ret
