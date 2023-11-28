@@ -30,7 +30,7 @@ _imgAvgFilter:
     ; Calculate the border for image processing
     MOV eax, [ebp-4]
     MOV ebx, 2
-    div ebx
+    DIV ebx
     DEC eax
     MOV [ebp-40], eax  ; border
 
@@ -154,7 +154,7 @@ image_row_sampling_end:
     shr ebx, 1
     ADD eax, ebx
     MOV ebx, ecx
-    div ebx
+    DIV ebx
 
     ; Calculate the offset for updating the filtered_image
     MOV ecx, eax
