@@ -1,3 +1,4 @@
+// Cada, Pecson - S15 - G10
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
