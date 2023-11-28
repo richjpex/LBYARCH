@@ -1,5 +1,4 @@
-section .data
-    sum dd 0
+global _imgAvgFilter
 
 section .bss
     input_image_pointer resd 1
@@ -12,10 +11,11 @@ section .bss
     j resd 1
     k resd 1
     l resd 1
+    
+section .data
+    total dd 0
 
 section .text
-global _imgAvgFilter
-
 _imgAvgFilter:
     push ebp
     MOV ebp, esp
@@ -97,7 +97,7 @@ for_col:
         JMP end_if_condition
 
     false_condition:
-        MOV dword [sum], 0
+        MOV dword [total], 0
         MOV dword [k], 0 
 
 for_row_sampling:
@@ -127,9 +127,9 @@ for_col_sampling:
             MOV esi, [input_image_pointer]
             ADD esi, eax
 
-            MOV eax, [sum]
+            MOV eax, [total]
             ADD eax, [esi]
-            MOV [sum], eax
+            MOV [total], eax
 
             INC dword [l]
             JMP for_col_sampling
@@ -143,7 +143,7 @@ for_row_sampling_end:
         MOV ebx, [sampling_window_size]
         MUL ebx
         MOV ebx, eax
-        MOV eax, [sum]
+        MOV eax, [total]
         MOV ecx, ebx
         shr ebx, 1
         ADD eax, ebx
