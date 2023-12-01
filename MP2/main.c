@@ -20,10 +20,10 @@ int main() {
     int image_size_x, image_size_y, sampling_window_size;
     
     printf("=========================================\n");
-	printf("Louis's and Rich's Image Average Filter\n");
+    printf("Louis's and Rich's Image Average Filter\n");
 	printf("A Machine Project for LBYARCH S15\n");
 	printf("=========================================\n");
-	sleep(2);
+	Sleep(2);
 	
     printf("\nEnter the number of rows for the matrix: ");
     scanf("%d", &image_size_x);
@@ -61,10 +61,7 @@ int main() {
     printMatrix(filtered_image, image_size_x, image_size_y);
     
     printf("=========================================\n");
-	printf("Thank you for using! :)\n\n");
-	printf("louis_cada@dlsu.edu.ph\n");
-	printf("richard_pecson@dlsu.edu.ph\n");
-	printf("De La Salle University\n");
+	printf("Thank you for using! :)\n");
 	printf("=========================================\n");
 
     free(filtered_image);

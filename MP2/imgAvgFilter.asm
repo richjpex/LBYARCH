@@ -129,7 +129,7 @@ _imgAvgFilter:
                 MOV ebx, [esp - 48]
                 IMUL ebx, ebx
                 MOV ecx, ebx
-                sar ecx, 1
+                SAR ecx, 1
 
                 ADD eax, ecx
 
