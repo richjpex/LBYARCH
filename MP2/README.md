@@ -6,7 +6,8 @@ gcc -c main.c -o main.obj -m32
 
 gcc main.obj imgAvgFilter.obj -o main.exe -m32
 
-main.exe```
+main.exe
+```
 
 ## Pseudocode
 ```
@@ -26,4 +27,5 @@ function imgAvgFilter(input_image, filtered_image, image_size_x, image_size_y, s
                 average = round(sum / (sampling_window_size * sampling_window_size))
                 filtered_image[i, j] = average
 
-    return filtered_image```
+    return filtered_image
+```
